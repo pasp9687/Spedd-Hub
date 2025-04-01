@@ -4,11 +4,15 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = player:FindFirstChildOfClass("PlayerGui")
+local screenGui = player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("SpeedGUI")
+if not screenGui then
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "SpeedGUI" 
+    screenGui.Parent = player:FindFirstChildOfClass("PlayerGui")
+end
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 260, 0, 250) 
+local frame = screenGui:FindFirstChild("Frame") or Instance.new("Frame")
+frame.Size = UDim2.new(0, 260, 0, 250)
 frame.Position = UDim2.new(0.5, -130, 0.5, -125)
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 frame.Active = true
@@ -56,7 +60,7 @@ creditLabel.Parent = frame
 
 
 local isApplied = false
-local defaultSpeed = 16  
+local defaultSpeed = 16 
 applyButton.MouseButton1Click:Connect(function()
     local newSpeed = tonumber(speedSlider.Text)
     if newSpeed and newSpeed > 0 then
@@ -67,10 +71,37 @@ end)
 
 
 resetButton.MouseButton1Click:Connect(function()
-   
+    
     isApplied = false
     speedSlider.Text = tostring(defaultSpeed)  
     humanoid.WalkSpeed = defaultSpeed  
+end)
+
+
+humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+    if humanoid.WalkSpeed ~= tonumber(speedSlider.Text) then
+        if isApplied then
+            humanoid.WalkSpeed = tonumber(speedSlider.Text) or 16
+        end
+    end
+end)
+
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if humanoid then
+        speedLabel.Text = "현재 속도: " .. math.floor(humanoid.WalkSpeed)
+    end
+end)
+
+
+player.CharacterAdded:Connect(function(char)
+    humanoid = char:WaitForChild("Humanoid")
+   
+    if isApplied then
+        humanoid.WalkSpeed = tonumber(speedSlider.Text) or defaultSpeed
+    else
+        humanoid.WalkSpeed = defaultSpeed
+    end
 end)
 
 
@@ -83,7 +114,7 @@ toggleButton.Parent = frame
 
 local mark = Instance.new("TextButton")
 mark.Size = UDim2.new(0, 40, 0, 40)
-mark.Position = UDim2.new(0.5, -20, 0.5, -20) 
+mark.Position = UDim2.new(0.5, -20, 0.5, -20)
 mark.Text = "S"
 mark.TextColor3 = Color3.new(1, 1, 1)
 mark.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
@@ -120,20 +151,4 @@ end)
 toggleButton.MouseButton1Click:Connect(function()
     frame.Visible = false
     mark.Visible = true
-end)
-
-
-humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-    if humanoid.WalkSpeed ~= tonumber(speedSlider.Text) then
-        if isApplied then
-            humanoid.WalkSpeed = tonumber(speedSlider.Text) or 16
-        end
-    end
-end)
-
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    if humanoid then
-        speedLabel.Text = "현재 속도: " .. math.floor(humanoid.WalkSpeed)
-    end
 end)
